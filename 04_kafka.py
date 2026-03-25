@@ -1,53 +1,59 @@
 import json
 import pathlib
 import csv
+import tomllib
 from kafka import KafkaProducer
 
 def publish_to_kafka():
-    # Definimos el archivo de entrada, que es el csv ya transformado
-    input_file = pathlib.Path("reviews_transformed.csv")
+    """
+    Tarea 4: Carga de resultados en Apache Kafka.
+    Lee los datos transformados y los envía al broker de Kafka definido en el TOML.
+    """
+    # 1. Cargar configuración desde el TOML
+    try:
+        with open("config.toml", "rb") as f:
+            config = tomllib.load(f)
+    except FileNotFoundError:
+        print("Error: No se encuentra el archivo config.toml")
+        return None
 
-    # Definimos el topic de Kafka donde vamos a publicar los mensajes
-    topic_name = "reviews_clean"
+    # 2. Definir rutas y parámetros de Kafka desde el TOML
+    input_file = pathlib.Path(config["paths"]["transformed_data"])
+    topic_name = config["kafka"]["topic"]
+    bootstrap_servers = config["kafka"]["bootstrap_servers"]
 
-    # Creamos el productor de Kafka
-    # value_serializer sirve para convertir cada mensaje a formato JSON en bytes
-    producer = KafkaProducer(
-        bootstrap_servers="localhost:9092",
-        value_serializer=lambda v: json.dumps(v).encode("utf-8")
-    )
+    print(f"Conectando a Kafka en: {bootstrap_servers}...")
 
-    # Abrimos el archivo transformado para leerlo fila por fila
-    with input_file.open(mode="r", encoding="utf-8", newline="") as infile:
-        reader = csv.DictReader(infile)
+    # 3. Crear el productor de Kafka
+    try:
+        producer = KafkaProducer(
+            bootstrap_servers=bootstrap_servers,
+            value_serializer=lambda v: json.dumps(v).encode("utf-8")
+        )
 
-        # Recorremos cada fila del csv
-        for row in reader:
-            # Creamos el mensaje que queremos enviar a Kafka
-            # Aquí seleccionamos las columnas más importantes
-            message = {
-                "review_id": row.get("id", ""),
-                "listing_id": row.get("listing_id", ""),
-                "reviewer_id": row.get("reviewer_id", ""),
-                "reviewer_name": row.get("reviewer_name", ""),
-                "date": row.get("date", ""),
-                "comments_clean": row.get("comments_clean", ""),
-                "comment_length": row.get("comment_length", ""),
-                "word_count": row.get("word_count", ""),
-                "review_year": row.get("review_year", ""),
-                "review_month": row.get("review_month", "")
-            }
+        # 4. Leer el archivo transformado y enviar mensaje por mensaje
+        if not input_file.exists():
+            print(f"Error: El archivo {input_file} no existe.")
+            return
 
-            # Enviamos el mensaje al topic
-            producer.send(topic_name, value=message)
+        with input_file.open(mode="r", encoding="utf-8", newline="") as infile:
+            reader = csv.DictReader(infile)
+            count = 0
+            for row in reader:
+                # Enviamos la fila completa como un diccionario JSON
+                producer.send(topic_name, value=row)
+                count += 1
+            
+            # Forzamos el envío de mensajes pendientes
+            producer.flush()
+            print(f"Éxito: Se han enviado {count} mensajes al topic '{topic_name}'.")
 
-    # Forzamos el envío de todos los mensajes pendientes
-    producer.flush()
+    except Exception as e:
+        print(f"Error al conectar o enviar a Kafka: {e}")
+    finally:
+        if 'producer' in locals():
+            producer.close()
 
-    # Cerramos el productor
-    producer.close()
-
-    print("Publicación en Kafka completada")
-
-
-publish_to_kafka()
+if __name__ == "__main__":
+    # Prueba rápida independiente
+    publish_to_kafka()
