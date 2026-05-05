@@ -1,0 +1,2 @@
+CONSULTA 1 - Conteo de compras por producto (outputMode=complete)
+============================================================
