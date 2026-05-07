@@ -1,30 +1,18 @@
 #!/usr/bin/env python
-"""
-Kafka Producer - Grupo 2
-Práctica 2 - SDPD2 (Sistemas Distribuidos de Procesamiento de Datos II)
-
-Produce mensajes aleatorios de compras al topic 'purchases' en el broker
-Kafka del Grupo 2. Ejecutar con el entorno virtual 'kafka' activado.
-
-Uso:
-    python kafka-producer-confluent_g2.py
-"""
-
 from random import choice
 from confluent_kafka import Producer
 
 
-# ─── Configuración del broker ─────────────────────────────────────────────────
-# Cambiar a la dirección del servidor de laboratorio cuando se trabaje en los PCs EIF
+#  Configuración del broker 
 BOOTSTRAP_SERVERS_LOCAL = "localhost:9092"
 BOOTSTRAP_SERVERS_LAB   = "localhost:9092"  # Grupo 2
 
 config = {
     "bootstrap.servers": BOOTSTRAP_SERVERS_LAB,
-    "acks": "all"   # Garantía de entrega: espera confirmación de todos los brokers
+    "acks": "all"   
 }
 
-# ─── Datos de ejemplo ─────────────────────────────────────────────────────────
+# Datos de ejemplo 
 TOPIC     = "purchases"
 USER_IDS  = ["eabara-2", "jsmith-2", "sgarcia-2", "jbernard-2", "htanaka-2", "awalther-2"]
 PRODUCTS  = ["book", "alarm clock", "t-shirts", "gift card", "batteries"]
