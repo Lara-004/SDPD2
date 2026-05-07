@@ -1,21 +1,9 @@
 #!/usr/bin/env python
-"""
-Kafka Consumer - Grupo 2
-Práctica 2 - SDPD2 (Sistemas Distribuidos de Procesamiento de Datos II)
-
-Consume mensajes del topic 'purchases' desde el broker Kafka del Grupo 2
-y los imprime por consola. Ejecutar con el entorno virtual 'kafka' activado.
-
-Uso:
-    python kafka-consumer-confluent_g2.py
-    (Pulsar Ctrl+C para detener)
-"""
 
 from confluent_kafka import Consumer
 
 
-# ─── Configuración del broker ─────────────────────────────────────────────────
-# Cambiar a la dirección del servidor de laboratorio cuando se trabaje en los PCs EIF
+# Configuración del broker
 BOOTSTRAP_SERVERS_LOCAL = "localhost:9092"
 BOOTSTRAP_SERVERS_LAB   = "localhost:9092"  # Grupo 2
 
@@ -41,8 +29,6 @@ if __name__ == "__main__":
             msg = consumer.poll(1.0)
 
             if msg is None:
-                # Sin mensajes nuevos: puede tardar hasta session.timeout.ms
-                # en el rebalanceo inicial del grupo consumidor
                 print("Waiting...")
 
             elif msg.error():
